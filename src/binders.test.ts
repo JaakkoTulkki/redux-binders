@@ -2,6 +2,7 @@ import {createStore, combineReducers, applyMiddleware, AnyAction} from 'redux';
 import thunk from 'redux-thunk';
 
 import {
+    AnyActionFunction, BindableAction,
     bindActionToScope,
     bindReducerToScope,
 } from './index';
@@ -49,7 +50,7 @@ describe('bindActionToScope with', () => {
 
     describe('plain actions', () => {
         it('should change with bound and non-bound reducers', () => {
-            const boundAction = bindActionToScope({type: ACTION_TYPE, payload: 'first'}, scope);
+            const boundAction: BindableAction = bindActionToScope({type: ACTION_TYPE, payload: 'first'}, scope);
             store.dispatch(boundAction);
             expect(store.getState()['scoped']).toEqual('first');
             expect(store.getState()['nonScoped']).toEqual('first');
@@ -65,13 +66,13 @@ describe('bindActionToScope with', () => {
 
     describe('action creators', () => {
         it('should change with bound and non-bound reducers', () => {
-            const boundAction = bindActionToScope(actionCreator, scope);
-            store.dispatch(boundAction('one'));
+            const boundAction = bindActionToScope(actionCreator, scope) as AnyActionFunction;
+            store.dispatch(boundAction(...['one']));
             expect(store.getState()['scoped']).toEqual('one');
             expect(store.getState()['nonScoped']).toEqual('one');
             expect(store.getState()['differentScoped']).toEqual('');
 
-            const boundActionToScope2 = bindActionToScope(actionCreator, otherScope)
+            const boundActionToScope2 = bindActionToScope(actionCreator, otherScope) as AnyActionFunction;
             store.dispatch(boundActionToScope2('two'));
             expect(store.getState()['scoped']).toEqual('one');
             expect(store.getState()['nonScoped']).toEqual('two');
@@ -84,7 +85,7 @@ describe('bindActionToScope with', () => {
             const boundSimpleAction = bindActionToScope({type: ACTION_TYPE, payload: 'ok-'}, scope);
             store.dispatch(boundSimpleAction);
 
-            const boundAction = bindActionToScope(thunkActionCreator, scope);
+            const boundAction = bindActionToScope(thunkActionCreator, scope) as AnyActionFunction;
             store.dispatch(boundAction('one', 'scoped'));
 
             expect(store.getState()['scoped']).toEqual('ok-onemyExtra');

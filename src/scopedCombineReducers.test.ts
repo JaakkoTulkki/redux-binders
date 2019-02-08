@@ -2,6 +2,7 @@ import {createStore, combineReducers, applyMiddleware, AnyAction} from 'redux';
 import thunk from 'redux-thunk';
 
 import {
+    AnyActionFunction,
     bindActionToScope,
     scopedCombineReducers,
 } from './index';
@@ -75,13 +76,13 @@ describe('scopedCombineReducers', () => {
     });
 
     it('should work with action creators returning objects', () => {
-        const boundAction = bindActionToScope(actionCreator, scope);
+        const boundAction = bindActionToScope(actionCreator, scope) as AnyActionFunction;
         store.dispatch(boundAction('one'));
         expect(store.getState()['scoped'].nested.value).toEqual('one');
         expect(store.getState()['nonScoped'].nested.value).toEqual('one');
         expect(store.getState()['differentScoped'].nested.value).toEqual('');
 
-        const boundActionToScope2 = bindActionToScope(actionCreator, otherScope);
+        const boundActionToScope2 = bindActionToScope(actionCreator, otherScope) as AnyActionFunction;
         store.dispatch(boundActionToScope2('two'));
         expect(store.getState()['scoped'].nested.value).toEqual('one');
         expect(store.getState()['nonScoped'].nested.value).toEqual('two');
@@ -92,7 +93,7 @@ describe('scopedCombineReducers', () => {
         const boundSimpleAction = bindActionToScope({type: ACTION_TYPE, payload: 'ok-'}, scope);
         store.dispatch(boundSimpleAction);
 
-        const boundAction = bindActionToScope(thunkActionCreator, scope);
+        const boundAction = bindActionToScope(thunkActionCreator, scope) as AnyActionFunction;
         store.dispatch(boundAction('one', 'scoped'));
 
         expect(store.getState()['scoped'].nested.value).toEqual('ok-onemyExtra');

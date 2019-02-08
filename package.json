@@ -8,23 +8,23 @@
     "dist/"
   ],
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^24.0.0",
     "jest": "^23.6.0",
     "jest-cli": "^23.6.0",
     "redux": "^4.0.1",
     "redux-thunk": "^2.3.0",
     "ts-jest": "^23.10.5",
+    "tslib": "^1.9.3",
     "typescript": "^3.3.1"
   },
   "peerDependencies": {
     "redux": "any",
     "redux-thunk": "any"
-  },
-  "dependencies": {
-    "@types/jest": "^24.0.0"
   }
 }
