@@ -26,6 +26,15 @@ function thunkActionCreator(payload, prop) {
   }
 }
 
+function asyncActionCreator(payload) {
+  return function(dispatch) {
+    return new Promise(resolve => {
+      dispatch(actionCreator(payload));
+      resolve(payload);
+    })
+  }
+}
+
 function reducer(state = '', action: AnyAction) {
   if (action.type === ACTION_TYPE) {
     return action.payload;
@@ -107,5 +116,16 @@ describe('scopedCombineReducers', () => {
     expect(store.getState()['scoped'].nested.value).toEqual('ok-onemyExtra');
     expect(store.getState()['nonScoped'].nested.value).toEqual('ok-onemyExtra');
     expect(store.getState()['differentScoped'].nested.value).toEqual('');
+  });
+
+  it('should work with async actions', async (done) => {
+    const boundAction = bindActionToScope(asyncActionCreator, scope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
+    store.dispatch(boundAction('async stuff')).then(data => {
+      expect(data).toEqual('async stuff');
+      expect(store.getState()['scoped'].nested.value).toEqual('async stuff');
+      expect(store.getState()['nonScoped'].nested.value).toEqual('async stuff');
+      expect(store.getState()['differentScoped'].nested.value).toEqual('');
+      done();
+    });
   });
 });
