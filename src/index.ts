@@ -1,19 +1,33 @@
-import {Action, AnyAction, combineReducers, ReducersMapObject} from 'redux';
+import {AnyAction, combineReducers, ReducersMapObject} from 'redux';
 import {ThunkAction} from "redux-thunk";
-import Any = jasmine.Any;
 
 export type Reducer<StateShape, Action=AnyAction> = (state: StateShape, action: Action) => StateShape;
-// export type BindableAction<R, S, E, A extends AnyAction> = AnyAction | ((...args:any[]) => AnyAction) |((...a: any[]) => ThunkAction<R, S, E, A>);
-export type AnyActionFunction = (...args: any[]) => AnyAction | ((dispatch: any, getState: any, extra: any) => any);
-export type BindableAction = AnyActionFunction | AnyAction;
+export type AnyActionFunction<ReturnValue, State, ExtraArg, Act extends AnyAction=AnyAction> = (...args: any[]) => AnyAction | ThunkAction<ReturnValue, State, ExtraArg, Act>;
+export type BindableAction<ReturnValue, State, ExtraArg, Act extends AnyAction> = AnyActionFunction<ReturnValue, State, ExtraArg, Act> | AnyAction;
 
 const scoper = '__scope';
-export function bindActionToScope(action: BindableAction, scope: string):  BindableAction{
-  if (typeof action !== "function") {
-    return {...action, ...{[scoper]: {scope}}};
+function bindActionCreatorToScope(creator, scope) {
+  return function wrappedActionCrator(...args) {
+    const action = creator(...args);
+    // if it returns an object, then bind that
+    if (typeof action === "object") {
+      return bindActionToScope(action, scope);
+    }
+    if (typeof action === "function") {
+      return function thunk(dispatch, getState, rest) {
+        function boundDispatch(actionFromThunk) {
+            dispatch(bindActionToScope(actionFromThunk, scope))
+        }
+        return action(boundDispatch, getState, rest)
+      }
+    }
+  }
+}
+export function bindActionToScope<ReturnValue, State, ExtraArg, Act extends AnyAction = AnyAction>(action: AnyAction | AnyActionFunction<ReturnValue, State, ExtraArg, Act>, scope: string): AnyAction | AnyActionFunction<ReturnValue, State, ExtraArg, Act>{
+  if (typeof action !== "function" ) {
+    return {...action, ...{[scoper]: {scope}}} as AnyAction;
   } else {
-    // it's a thunk
-    return bindActionCreatorToScope(action, scope);
+    return bindActionCreatorToScope(action, scope) as AnyActionFunction<ReturnValue, State, ExtraArg, Act>;
   }
 }
 
@@ -26,29 +40,6 @@ export function bindReducerToScope<StateShape, Action=AnyAction>(reducer: Reduce
       return reducer(state, action);
     }
     return state;
-  }
-}
-
-function bindDispatchToScope(dispatch, scope) {
-  return function decoratedDispatch(action) {
-    return dispatch(bindActionToScope(action, scope));
-  }
-}
-
-function bindActionCreatorToScope(creator, scope) {
-  return function wrappedActionCrator(...args) {
-    const action = creator(...args);
-    // if it returns an object, then bind that
-    if (typeof action === "object") {
-      return bindActionToScope(action, scope);
-    }
-    // if it's a thunk
-    if (typeof action === "function") {
-      return function thunk(dispatch, getState, rest) {
-        const boundDispatch = bindDispatchToScope(dispatch, scope);
-        return action(boundDispatch, getState, rest)
-      }
-    }
   }
 }
 

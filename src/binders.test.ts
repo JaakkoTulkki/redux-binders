@@ -19,12 +19,22 @@ function actionCreator(payload) {
 }
 
 function thunkActionCreator(payload, prop) {
-    return function thunkAction(anotherDispatch, getState, extra) {
+    return function thunkAction(dispatch, getState, extra) {
         const state = getState()[prop];
         const contrivedPayload = state + payload + extra;
-        anotherDispatch({type: ACTION_TYPE, payload: contrivedPayload});
+        dispatch({type: ACTION_TYPE, payload: contrivedPayload});
     }
 }
+
+function asynThunkActionCreator(payload) {
+    return function thunkAction(dispatch, getState, extra) {
+        return new Promise((resolve) => {
+            dispatch(actionCreator(payload));
+            resolve(payload);
+        });
+    }
+}
+
 
 function reducer(state = '', action: AnyAction) {
     if (action.type === ACTION_TYPE) {
@@ -32,6 +42,13 @@ function reducer(state = '', action: AnyAction) {
     }
     return state;
 }
+interface StateShape {
+    scoped: any;
+    nonScoped: any;
+    differentScoped: any;
+}
+
+type ExtraArg = string;
 
 const rootReducer = combineReducers({
     scoped: bindReducerToScope(reducer, scope),
@@ -50,13 +67,13 @@ describe('bindActionToScope with', () => {
 
     describe('plain actions', () => {
         it('should change with bound and non-bound reducers', () => {
-            const boundAction: BindableAction = bindActionToScope({type: ACTION_TYPE, payload: 'first'}, scope);
+            const boundAction = bindActionToScope({type: ACTION_TYPE, payload: 'first'}, scope) as AnyAction;
             store.dispatch(boundAction);
             expect(store.getState()['scoped']).toEqual('first');
             expect(store.getState()['nonScoped']).toEqual('first');
             expect(store.getState()['differentScoped']).toEqual('');
 
-            const boundActionToScope2 = bindActionToScope({type: ACTION_TYPE, payload: 'other'}, otherScope)
+            const boundActionToScope2 = bindActionToScope({type: ACTION_TYPE, payload: 'other'}, otherScope) as AnyAction;
             store.dispatch(boundActionToScope2);
             expect(store.getState()['scoped']).toEqual('first');
             expect(store.getState()['nonScoped']).toEqual('other');
@@ -66,13 +83,14 @@ describe('bindActionToScope with', () => {
 
     describe('action creators', () => {
         it('should change with bound and non-bound reducers', () => {
-            const boundAction = bindActionToScope(actionCreator, scope) as AnyActionFunction;
-            store.dispatch(boundAction(...['one']));
+            const boundAction = bindActionToScope<undefined, StateShape, ExtraArg>(actionCreator, scope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
+            store.dispatch(boundAction('one'));
             expect(store.getState()['scoped']).toEqual('one');
             expect(store.getState()['nonScoped']).toEqual('one');
             expect(store.getState()['differentScoped']).toEqual('');
 
-            const boundActionToScope2 = bindActionToScope(actionCreator, otherScope) as AnyActionFunction;
+
+            const boundActionToScope2 = bindActionToScope<undefined, StateShape, ExtraArg>(actionCreator, otherScope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
             store.dispatch(boundActionToScope2('two'));
             expect(store.getState()['scoped']).toEqual('one');
             expect(store.getState()['nonScoped']).toEqual('two');
@@ -82,15 +100,26 @@ describe('bindActionToScope with', () => {
 
     describe('action creators that return thunks', () => {
         it('should work with bound and non-bound reducers', () => {
-            const boundSimpleAction = bindActionToScope({type: ACTION_TYPE, payload: 'ok-'}, scope);
+            const boundSimpleAction = bindActionToScope({type: ACTION_TYPE, payload: 'ok-'}, scope) as AnyAction;
             store.dispatch(boundSimpleAction);
 
-            const boundAction = bindActionToScope(thunkActionCreator, scope) as AnyActionFunction;
+            const boundAction = bindActionToScope<void, StateShape, ExtraArg>(thunkActionCreator, scope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
             store.dispatch(boundAction('one', 'scoped'));
 
             expect(store.getState()['scoped']).toEqual('ok-onemyExtra');
             expect(store.getState()['nonScoped']).toEqual('ok-onemyExtra');
             expect(store.getState()['differentScoped']).toEqual('');
+        });
+
+        it('should work with async thunks', async (done) => {
+            const boundAction = bindActionToScope<Promise<any>, StateShape, ExtraArg>(asynThunkActionCreator, scope) as AnyActionFunction<Promise<any>, StateShape, ExtraArg>;
+            store.dispatch(boundAction('hello world')).then((data: string) => {
+                expect(data).toEqual('hello world');
+                expect(store.getState().scoped).toEqual('hello world');
+                expect(store.getState().nonScoped).toEqual('hello world');
+                expect(store.getState().differentScoped).toEqual('');
+                done();
+            })
         });
     });
 });
