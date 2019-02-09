@@ -33,6 +33,14 @@ function reducer(state = '', action: AnyAction) {
   return state;
 }
 
+type ExtraArg = string;
+
+interface StateShape {
+  scoped: any;
+  nonScoped: any;
+  differentScoped: any;
+}
+
 const rootReducer = combineReducers({
   scoped: scopedCombineReducers({
     nested: combineReducers({
@@ -68,7 +76,7 @@ describe('scopedCombineReducers', () => {
     expect(store.getState()['nonScoped'].nested.value).toEqual('first');
     expect(store.getState()['differentScoped'].nested.value).toEqual('');
 
-    const boundActionToScope2 = bindActionToScope({type: ACTION_TYPE, payload: 'other'}, otherScope)
+    const boundActionToScope2 = bindActionToScope({type: ACTION_TYPE, payload: 'other'}, otherScope);
     store.dispatch(boundActionToScope2);
     expect(store.getState()['scoped'].nested.value).toEqual('first');
     expect(store.getState()['nonScoped'].nested.value).toEqual('other');
@@ -76,13 +84,13 @@ describe('scopedCombineReducers', () => {
   });
 
   it('should work with action creators returning objects', () => {
-    const boundAction = bindActionToScope(actionCreator, scope) as AnyActionFunction;
+    const boundAction = bindActionToScope(actionCreator, scope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
     store.dispatch(boundAction('one'));
     expect(store.getState()['scoped'].nested.value).toEqual('one');
     expect(store.getState()['nonScoped'].nested.value).toEqual('one');
     expect(store.getState()['differentScoped'].nested.value).toEqual('');
 
-    const boundActionToScope2 = bindActionToScope(actionCreator, otherScope) as AnyActionFunction;
+    const boundActionToScope2 = bindActionToScope(actionCreator, otherScope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
     store.dispatch(boundActionToScope2('two'));
     expect(store.getState()['scoped'].nested.value).toEqual('one');
     expect(store.getState()['nonScoped'].nested.value).toEqual('two');
@@ -93,7 +101,7 @@ describe('scopedCombineReducers', () => {
     const boundSimpleAction = bindActionToScope({type: ACTION_TYPE, payload: 'ok-'}, scope);
     store.dispatch(boundSimpleAction);
 
-    const boundAction = bindActionToScope(thunkActionCreator, scope) as AnyActionFunction;
+    const boundAction = bindActionToScope(thunkActionCreator, scope) as AnyActionFunction<undefined, StateShape, ExtraArg>;
     store.dispatch(boundAction('one', 'scoped'));
 
     expect(store.getState()['scoped'].nested.value).toEqual('ok-onemyExtra');
