@@ -17,19 +17,18 @@ function bindActionCreatorToScope(creator, scope) {
       return bindActionToScope(action, scope);
     }
     if (typeof action === "function") {
-      return function thunk(dispatch, getState, rest) {
+      return function thunk(dispatch, getState, extra) {
         function boundDispatch(actionFromThunk) {
           dispatch(bindActionToScope(actionFromThunk, scope))
         }
-
-        return action(boundDispatch, getState, rest)
+        return action(boundDispatch, getState, extra)
       }
     }
   }
 }
 
 export function bindActionToScope<ReturnValue, State, ExtraArg, Act extends AnyAction = AnyAction>(action: AnyAction | AnyActionFunction<ReturnValue, State, ExtraArg, Act>, scope: string): AnyAction | AnyActionFunction<ReturnValue, State, ExtraArg, Act> {
-  if (typeof action !== "function") {
+  if (typeof action === "object") {
     return {...action, ...{[scoper]: {scope}}} as AnyAction;
   } else {
     return bindActionCreatorToScope(action, scope) as AnyActionFunction<ReturnValue, State, ExtraArg, Act>;
