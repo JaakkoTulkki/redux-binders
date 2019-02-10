@@ -1,7 +1,7 @@
 {
-  "name": "bound-reducers",
+  "name": "bound-redux-reducers",
   "version": "1.0.0",
-  "description": "",
+  "description": "Redux helper library that encourages reducer reuse",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
