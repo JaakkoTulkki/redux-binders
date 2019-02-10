@@ -60,7 +60,7 @@ After dispatching the two actions, the state is:
 ```
 
 ### scopedCombineReducers
-Bind's Redux's `combineReducers` to a scope. `scopedCombineReducers`
+Binds Redux's `combineReducers` to a scope. `scopedCombineReducers`
 is a wrapper around `combineReducers`: you can easily scope an object's
 reducing functions (the object's values) into a scope.
 
