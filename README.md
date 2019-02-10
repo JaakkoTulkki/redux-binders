@@ -29,7 +29,7 @@ Takes two arguments:
 ```
 const {createStore, applyMiddleware, combineReducers} = require('redux');
 const thunk = require('redux-thunk').default;
-const {bindActionToScope, bindReducerToScope} = require('bound-reducers');
+const {bindActionToScope, bindReducerToScope} = require('bound-redux-reducers');
 
 function reducer(state='', action) {
   if(action.type === 'a') {
@@ -68,7 +68,7 @@ reducing functions (the object's values) into a scope.
 const {createStore, applyMiddleware, combineReducers} = require('redux');
 const thunk = require('redux-thunk').default;
 // import scopedCombineReducers
-const {scopedCombineReducers, bindActionToScope, bindReducerToScope} = require('bound-reducers');
+const {scopedCombineReducers, bindActionToScope, bindReducerToScope} = require('bound-redux-reducers');
 
 // Reducer stays the same
 function reducer(state='', action) {
