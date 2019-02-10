@@ -10,7 +10,7 @@ export type BindableAction<ReturnValue, State, ExtraArg, Act extends AnyAction> 
 const scoper = '__scope';
 
 function bindActionCreatorToScope(creator, scope) {
-  return function wrappedActionCrator(...args) {
+  return function wrappedActionCreator(...args) {
     const action = creator(...args);
     // if it returns an object, then bind that
     if (typeof action === "object") {
@@ -18,8 +18,8 @@ function bindActionCreatorToScope(creator, scope) {
     }
     if (typeof action === "function") {
       return function thunk(dispatch, getState, extra) {
-        function boundDispatch(actionFromThunk) {
-          dispatch(bindActionToScope(actionFromThunk, scope))
+        function boundDispatch(dispatchedActionFromThunk) {
+          dispatch(bindActionToScope(dispatchedActionFromThunk, scope))
         }
         return action(boundDispatch, getState, extra)
       }
@@ -30,9 +30,8 @@ function bindActionCreatorToScope(creator, scope) {
 export function bindActionToScope<ReturnValue, State, ExtraArg, Act extends AnyAction = AnyAction>(action: AnyAction | AnyActionFunction<ReturnValue, State, ExtraArg, Act>, scope: string): AnyAction | AnyActionFunction<ReturnValue, State, ExtraArg, Act> {
   if (typeof action === "object") {
     return {...action, ...{[scoper]: {scope}}} as AnyAction;
-  } else {
-    return bindActionCreatorToScope(action, scope) as AnyActionFunction<ReturnValue, State, ExtraArg, Act>;
   }
+  return bindActionCreatorToScope(action, scope) as AnyActionFunction<ReturnValue, State, ExtraArg, Act>;
 }
 
 export function bindReducerToScope<StateShape, Action=AnyAction>(reducer: Reducer<StateShape, Action>, scope: string) {
