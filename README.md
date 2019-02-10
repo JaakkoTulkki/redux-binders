@@ -15,16 +15,16 @@ You need install these two libraries as well.
 ## Usage
 
 ### bindReducerToScope
-Binds reducers to a scope.
+Binds a reducer to a scope.
 Takes two arguments:
-1. Reducer
-2. Scope
+1. Reducer `reducer function`
+2. Scope `string`
 
 ### bindActionToScope
 Binds an action or action creator to a scope.
 Takes two arguments:
-1. Action or action creator (action creator can return an action or a thunk)
-2. Scope
+1. Action or action creator (action creator can return an action or a thunk) `action object | function`
+2. Scope `string`
 
 ```
 const {createStore, applyMiddleware, combineReducers} = require('redux');
@@ -77,7 +77,7 @@ function reducer(state='', action) {
   }
   return state;
 }
-// aScope is now a nested object that's wrapped with scopedCombineReducers
+// aScope is now a nested object that's wrapped with scopedCombineReducers and bound to a scope
 const rootRecuder = combineReducers({
   aScope: scopedCombineReducers({
     nested: combineReducers({
